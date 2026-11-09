@@ -1,5 +1,7 @@
 import type { AuthResponse, RefreshResponse, User } from '../types/auth'
 
+export type Monitor = { id: number; url: string; interval_seconds: number; created_at: string }
+
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080'
 
 export class ApiError extends Error {
@@ -75,6 +77,21 @@ export const usersApi = {
       method: 'POST',
       headers: { Authorization: `Bearer ${accessToken}` },
       body,
+    })
+  },
+}
+
+export const monitorsApi = {
+  list(accessToken: string) {
+    return apiRequest<Monitor[]>('/api/v1/monitors', {
+      headers: { Authorization: `Bearer ${accessToken}` },
+    })
+  },
+  create(accessToken: string, url: string, intervalSeconds: number) {
+    return apiRequest<Monitor>('/api/v1/monitors', {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${accessToken}` },
+      body: JSON.stringify({ url, interval_seconds: intervalSeconds }),
     })
   },
 }

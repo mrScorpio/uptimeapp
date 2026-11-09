@@ -7,6 +7,7 @@ import (
 	"github.com/mrscorpio/uptimeapp/backend/internal/auth"
 	"github.com/mrscorpio/uptimeapp/backend/internal/config"
 	"github.com/mrscorpio/uptimeapp/backend/internal/httpjson"
+	"github.com/mrscorpio/uptimeapp/backend/internal/monitors"
 	"github.com/mrscorpio/uptimeapp/backend/internal/users"
 
 	"gorm.io/gorm"
@@ -33,6 +34,7 @@ func (a *API) Handler() http.Handler {
 	auth.NewController(a.DB, a.Config).RegisterRoutes(mux)
 	tokens := auth.Tokens{Secret: []byte(a.Config.JWTSecret), AccessTTL: a.Config.AccessTTL, RefreshTTL: a.Config.RefreshTTL}
 	users.NewController(a.DB, tokens, a.Config.AvatarDir).RegisterRoutes(mux)
+	monitors.NewController(a.DB, tokens).RegisterRoutes(mux)
 	return a.cors(mux)
 }
 

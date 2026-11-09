@@ -32,7 +32,7 @@ func testAPI(t *testing.T) (*API, http.Handler) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	cfg := config.Config{JWTSecret: "a-secret-of-at-least-thirty-two-characters", AllowedOrigin: "http://localhost:3000", AccessTTL: 15 * time.Minute, RefreshTTL: 30 * 24 * time.Hour}
+	cfg := config.Config{JWTSecret: "a-secret-of-at-least-thirty-two-characters", AllowedOrigin: "http://localhost:3000", AccessTTL: 15 * time.Minute, RefreshTTL: 30 * 24 * time.Hour, AvatarDir: t.TempDir()}
 	a := New(db, cfg)
 	return a, a.Handler()
 }
@@ -94,6 +94,39 @@ func TestAvatarUpload(t *testing.T) {
 	h.ServeHTTP(badResponse, badReq)
 	if badResponse.Code != 400 {
 		t.Fatalf("invalid avatar accepted: %d", badResponse.Code)
+	}
+}
+
+func TestMonitorCreateAndList(t *testing.T) {
+	_, h := testAPI(t)
+	suffix := fmt.Sprintf("%d", time.Now().UnixNano())
+	reg := request(h, "POST", "/api/v1/auth/register", fmt.Sprintf(`{"email":"%s@example.com","login":"user%s","password":"password123"}`, suffix, suffix), "", "")
+	if reg.Code != http.StatusCreated {
+		t.Fatalf("register: %d %s", reg.Code, reg.Body.String())
+	}
+	token := access(t, reg)
+	created := request(h, "POST", "/api/v1/monitors", `{"url":"https://example.com","interval_seconds":60}`, token, "")
+	if created.Code != http.StatusCreated {
+		t.Fatalf("create monitor: %d %s", created.Code, created.Body.String())
+	}
+	var monitor store.Monitor
+	if err := json.Unmarshal(created.Body.Bytes(), &monitor); err != nil {
+		t.Fatal(err)
+	}
+	if monitor.ID == 0 || monitor.URL != "https://example.com" || monitor.Interval != 60 {
+		t.Fatalf("unexpected monitor: %+v", monitor)
+	}
+	listed := request(h, "GET", "/api/v1/monitors", "", token, "")
+	if listed.Code != http.StatusOK || !strings.Contains(listed.Body.String(), `"id":`+fmt.Sprint(monitor.ID)) {
+		t.Fatalf("list monitors: %d %s", listed.Code, listed.Body.String())
+	}
+	for _, body := range []string{`{"url":"ftp://example.com","interval_seconds":60}`, `{"url":"https://example.com","interval_seconds":0}`} {
+		if response := request(h, "POST", "/api/v1/monitors", body, token, ""); response.Code != http.StatusBadRequest {
+			t.Fatalf("invalid monitor accepted: %d %s", response.Code, response.Body.String())
+		}
+	}
+	if response := request(h, "GET", "/api/v1/monitors", "", "", ""); response.Code != http.StatusUnauthorized {
+		t.Fatalf("unauthenticated list accepted: %d", response.Code)
 	}
 }
 
