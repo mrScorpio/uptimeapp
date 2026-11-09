@@ -1,0 +1,138 @@
+:root {
+  color-scheme: light;
+  font-family: Arial, Helvetica, sans-serif;
+  color: #152033;
+  background: #f3f6fb;
+}
+
+* { box-sizing: border-box; }
+body { margin: 0; }
+button, input { font: inherit; }
+
+.center {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+}
+
+.card {
+  width: min(100%, 440px);
+  padding: 36px;
+  border: 1px solid #e0e7f1;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 48px rgb(24 44 77 / 8%);
+}
+
+.brand { color: #315bcc; font-weight: 700; letter-spacing: .02em; }
+h1 { margin: 22px 0 8px; font-size: 28px; line-height: 1.2; }
+.muted { margin: 0 0 28px; color: #5f6d81; line-height: 1.5; }
+form { display: flex; flex-direction: column; }
+label { margin: 0 0 7px; font-weight: 600; font-size: 14px; }
+input {
+  width: 100%;
+  height: 44px;
+  margin-bottom: 18px;
+  padding: 0 12px;
+  border: 1px solid #c9d3e1;
+  border-radius: 8px;
+  background: #fff;
+}
+input:focus { outline: 2px solid #9bb5ff; border-color: #315bcc; }
+input:disabled { background: #f3f6fb; }
+.hint { margin: -10px 0 18px; color: #5f6d81; font-size: 12px; }
+.error { margin: 0 0 18px; color: #b42318; line-height: 1.4; }
+button {
+  min-height: 44px;
+  padding: 10px 16px;
+  border: 0;
+  border-radius: 8px;
+  background: #315bcc;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+}
+button:hover:not(:disabled) { background: #2449ab; }
+button:disabled { opacity: .65; cursor: wait; }
+button.secondary { background: #eaf0ff; color: #254aa9; }
+button.secondary:hover:not(:disabled) { background: #dce6ff; }
+.switch-link { margin: 24px 0 0; text-align: center; color: #5f6d81; }
+a { color: #315bcc; font-weight: 600; }
+dl { margin: 0 0 26px; }
+dl div { display: flex; justify-content: space-between; gap: 16px; padding: 13px 0; border-bottom: 1px solid #e0e7f1; }
+dt { color: #5f6d81; }
+dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; text-align: right; }
+
+.dashboard { min-height: 100vh; }
+.dashboard-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  min-height: 72px;
+  padding: 12px max(24px, calc((100vw - 1120px) / 2));
+  border-bottom: 1px solid #e0e7f1;
+  background: #fff;
+}
+.profile-menu { position: relative; }
+.profile-menu summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 8px 4px 4px;
+  border-radius: 10px;
+  cursor: pointer;
+  list-style: none;
+  font-weight: 600;
+}
+.profile-menu summary::-webkit-details-marker { display: none; }
+.profile-menu summary:hover, .profile-menu[open] summary { background: #f3f6fb; }
+.profile-menu summary:focus-visible { outline: 2px solid #315bcc; outline-offset: 2px; }
+.profile-avatar {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #eaf0ff;
+  color: #254aa9;
+}
+.profile-avatar-image { width: 36px; height: 36px; border-radius: 50%; object-fit: cover; }
+.avatar-editor { display: flex; flex-direction: column; align-items: flex-start; gap: 8px; margin: 20px 0; }
+.avatar-preview { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; }
+.avatar-editor input { height: auto; margin: 0; padding: 10px; }
+.profile-chevron { color: #5f6d81; font-size: 20px; line-height: 1; }
+.profile-dropdown {
+  position: absolute;
+  z-index: 1;
+  top: calc(100% + 10px);
+  right: 0;
+  width: min(320px, calc(100vw - 32px));
+  padding: 20px;
+  border: 1px solid #e0e7f1;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 16px 48px rgb(24 44 77 / 12%);
+}
+.profile-dropdown-title { margin: 0 0 8px; font-weight: 700; }
+.profile-dropdown dl { margin: 0 0 18px; }
+.profile-dropdown dl div { align-items: flex-start; }
+.profile-dropdown dd { max-width: 70%; }
+.profile-dropdown button { width: 100%; }
+.profile-link {
+  display: block;
+  margin: 0 0 16px;
+  text-decoration: none;
+}
+.profile-error { margin: 16px 0 0; }
+.profile-page .profile-card { width: min(100%, 520px); }
+.back-link { display: inline-block; margin-bottom: 24px; text-decoration: none; }
+.profile-details { margin: 24px 0; }
+.profile-details div { padding: 14px 0; }
+.profile-card form { margin-top: 24px; }
+.profile-card input { margin-bottom: 20px; }
+.success { margin: 0 0 18px; color: #18794e; }
+@media (max-width: 480px) {
+  .profile-name { display: none; }
+}
