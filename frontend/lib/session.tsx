@@ -1,7 +1,7 @@
 'use client'
 
 import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react'
-import { ApiError, authApi, usersApi } from './api'
+import { ApiError, authApi, setAuthTokenProvider, usersApi } from './api'
 import type { User } from '../types/auth'
 
 type SessionState = {
@@ -67,13 +67,17 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
     }
   }, [clear, refresh])
 
-  const loadUser = useCallback(async (token: string): Promise<User> => {
+  useEffect(() => {
+    setAuthTokenProvider(getAccessToken)
+  }, [getAccessToken])
+
+  const loadUser = useCallback(async (): Promise<User> => {
     try {
-      return await usersApi.me(token)
+      return await usersApi.me()
     } catch (error) {
       if (error instanceof ApiError && error.status === 401) {
-        const nextToken = await refresh()
-        return usersApi.me(nextToken)
+        await refresh()
+        return usersApi.me()
       }
       throw error
     }
@@ -117,16 +121,14 @@ export function SessionProvider({ children }: { children: React.ReactNode }) {
   }, [clear])
 
   const updateName = useCallback(async (name: string) => {
-    const token = await getAccessToken()
-    const user = await usersApi.updateName(token, name)
+    const user = await usersApi.updateName(name)
     setSession({ status: 'authenticated', user })
-  }, [getAccessToken])
+  }, [])
 
   const updateAvatar = useCallback(async (file: File) => {
-    const token = await getAccessToken()
-    const user = await usersApi.updateAvatar(token, file)
+    const user = await usersApi.updateAvatar(file)
     setSession({ status: 'authenticated', user })
-  }, [getAccessToken])
+  }, [])
 
   return (
     <SessionContext.Provider value={{ ...session, register, login, logout, getAccessToken, updateName, updateAvatar }}>

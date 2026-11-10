@@ -133,6 +133,31 @@ dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; text-align: right; }
 .profile-card form { margin-top: 24px; }
 .profile-card input { margin-bottom: 20px; }
 .success { margin: 0 0 18px; color: #18794e; }
+.monitor-page { width: min(100% - 48px, 960px); margin: 42px auto; }
+.monitor-heading { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 28px; }
+.monitor-heading h1 { margin-top: 0; }
+.monitor-heading .muted { margin-bottom: 0; }
+.add-monitor-link { display: inline-flex; align-items: center; min-height: 44px; padding: 0 16px; border-radius: 8px; background: #315bcc; color: #fff; text-decoration: none; }
+.add-monitor-link:hover { background: #2449ab; }
+.monitor-list { display: grid; gap: 12px; margin-bottom: 32px; }
+.empty-monitors { padding: 24px; border: 1px dashed #c9d3e1; border-radius: 12px; color: #5f6d81; text-align: center; }
+.monitor-card { display: flex; align-items: center; gap: 14px; padding: 18px 20px; border: 1px solid #e0e7f1; border-radius: 12px; background: #fff; }
+.monitor-indicator { width: 10px; height: 10px; flex: 0 0 10px; border-radius: 50%; background: #98a2b3; }
+.monitor-info { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; }
+.monitor-info a { overflow-wrap: anywhere; }
+.monitor-info span, .monitor-status { color: #5f6d81; font-size: 13px; }
+.modal-backdrop { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; overflow-y: auto; padding: 24px; background: rgb(21 32 51 / 42%); }
+.monitor-form-card { width: min(100%, 440px); margin: auto; }
+.monitor-form-card h2 { margin: 0 0 8px; }
+.monitor-form-card .muted { margin-bottom: 24px; }
+.monitor-form-actions { display: flex; gap: 12px; }
+.monitor-form-actions button { flex: 1; }
+@media (max-width: 560px) {
+  .monitor-page { width: min(100% - 32px, 960px); margin-top: 28px; }
+  .monitor-heading { align-items: flex-start; flex-direction: column; }
+  .monitor-card { align-items: flex-start; flex-wrap: wrap; }
+  .monitor-status { margin-left: 24px; }
+}
 @media (max-width: 480px) {
   .profile-name { display: none; }
 }

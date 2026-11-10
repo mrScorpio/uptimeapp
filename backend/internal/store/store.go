@@ -30,6 +30,15 @@ type Session struct {
 	UpdatedAt time.Time
 }
 
+type Monitor struct {
+	ID        uint      `gorm:"primaryKey" json:"id"`
+	UserID    uint      `gorm:"index;not null" json:"user_id"`
+	URL       string    `gorm:"not null" json:"url"`
+	Interval  int       `gorm:"not null" json:"interval_seconds"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"-"`
+}
+
 func Open(ctx context.Context, dsn string) (*gorm.DB, error) {
 	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{Logger: logger.Default.LogMode(logger.Silent)})
 	if err != nil {
@@ -42,7 +51,7 @@ func Open(ctx context.Context, dsn string) (*gorm.DB, error) {
 	if err := sqlDB.PingContext(ctx); err != nil {
 		return nil, err
 	}
-	if err := db.WithContext(ctx).AutoMigrate(&User{}, &Session{}); err != nil {
+	if err := db.WithContext(ctx).AutoMigrate(&User{}, &Session{}, &Monitor{}); err != nil {
 		return nil, err
 	}
 	return db, nil
