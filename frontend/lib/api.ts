@@ -1,8 +1,13 @@
+import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import type { AuthResponse, RefreshResponse, User } from '../types/auth'
 
 export type Monitor = { id: number; url: string; interval_seconds: number; created_at: string }
 
 const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:8080'
+
+type RequestConfig = InternalAxiosRequestConfig & { skipAuth?: boolean }
+type AuthTokenProvider = () => Promise<string>
+let authTokenProvider: AuthTokenProvider | null = null
 
 export class ApiError extends Error {
   constructor(message: string, readonly status: number) {
@@ -11,87 +16,82 @@ export class ApiError extends Error {
   }
 }
 
-async function apiRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
-  let response: Response
-  try {
-    response = await fetch(`${apiBaseUrl}${path}`, {
-      ...options,
-      credentials: 'include',
-      cache: 'no-store',
-      headers: {
-        ...(options.body && !(options.body instanceof FormData) ? { 'Content-Type': 'application/json' } : {}),
-        ...options.headers,
-      },
-    })
-  } catch {
-    throw new ApiError('Не удалось связаться с сервером. Повторите попытку позже.', 0)
-  }
+export const apiClient = axios.create({
+  baseURL: apiBaseUrl,
+  withCredentials: true,
+  headers: { 'Content-Type': 'application/json' },
+})
 
-  if (!response.ok) {
-    const body = await response.json().catch(() => null) as { error?: string } | null
-    throw new ApiError(body?.error ?? 'Не удалось выполнить запрос.', response.status)
-  }
-
-  if (response.status === 204) return undefined as T
-  return response.json() as Promise<T>
+export function setAuthTokenProvider(provider: AuthTokenProvider) {
+  authTokenProvider = provider
 }
 
+apiClient.interceptors.request.use(async (config) => {
+  const requestConfig = config as RequestConfig
+  if (requestConfig.skipAuth) return config
+  if (!authTokenProvider) throw new ApiError('Сессия не инициализирована.', 401)
+  const token = await authTokenProvider()
+  config.headers.set('Authorization', `Bearer ${token}`)
+  return config
+})
+
+apiClient.interceptors.response.use(
+  (response) => response,
+  (cause: unknown) => {
+    if (cause instanceof AxiosError) {
+      const message = cause.response?.data?.error ?? (cause.request
+        ? 'Не удалось связаться с сервером. Повторите попытку позже.'
+        : 'Не удалось выполнить запрос.')
+      return Promise.reject(new ApiError(message, cause.response?.status ?? 0))
+    }
+    return Promise.reject(cause)
+  },
+)
+
 export const authApi = {
-  register(email: string, login: string, password: string) {
-    return apiRequest<AuthResponse>('/api/v1/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ email, login, password }),
-    })
+  async register(email: string, login: string, password: string) {
+    const { data } = await apiClient.post<AuthResponse>('/api/v1/auth/register', { email, login, password }, { skipAuth: true } as RequestConfig)
+    return data
   },
-  login(identifier: string, password: string) {
-    return apiRequest<AuthResponse>('/api/v1/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ identifier, password }),
-    })
+  async login(identifier: string, password: string) {
+    const { data } = await apiClient.post<AuthResponse>('/api/v1/auth/login', { identifier, password }, { skipAuth: true } as RequestConfig)
+    return data
   },
-  refresh() {
-    return apiRequest<RefreshResponse>('/api/v1/auth/refresh', { method: 'POST' })
+  async refresh() {
+    const { data } = await apiClient.post<RefreshResponse>('/api/v1/auth/refresh', undefined, { skipAuth: true } as RequestConfig)
+    return data
   },
-  logout() {
-    return apiRequest<void>('/api/v1/auth/logout', { method: 'POST' })
+  async logout() {
+    await apiClient.post<void>('/api/v1/auth/logout', undefined, { skipAuth: true } as RequestConfig)
   },
 }
 
 export const usersApi = {
-  me(accessToken: string) {
-    return apiRequest<User>('/api/v1/users/me', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
+  async me() {
+    const { data } = await apiClient.get<User>('/api/v1/users/me')
+    return data
   },
-  updateName(accessToken: string, name: string) {
-    return apiRequest<User>('/api/v1/users/me', {
-      method: 'PATCH',
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body: JSON.stringify({ name }),
-    })
+  async updateName(name: string) {
+    const { data } = await apiClient.patch<User>('/api/v1/users/me', { name })
+    return data
   },
-  updateAvatar(accessToken: string, file: File) {
+  async updateAvatar(file: File) {
     const body = new FormData()
     body.append('avatar', file)
-    return apiRequest<User>('/api/v1/users/me/avatar', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body,
+    const { data } = await apiClient.post<User>('/api/v1/users/me/avatar', body, {
+      headers: { 'Content-Type': 'multipart/form-data' },
     })
+    return data
   },
 }
 
 export const monitorsApi = {
-  list(accessToken: string) {
-    return apiRequest<Monitor[]>('/api/v1/monitors', {
-      headers: { Authorization: `Bearer ${accessToken}` },
-    })
+  async list() {
+    const { data } = await apiClient.get<Monitor[]>('/api/v1/monitors')
+    return data
   },
-  create(accessToken: string, url: string, intervalSeconds: number) {
-    return apiRequest<Monitor>('/api/v1/monitors', {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${accessToken}` },
-      body: JSON.stringify({ url, interval_seconds: intervalSeconds }),
-    })
+  async create(url: string, intervalSeconds: number) {
+    const { data } = await apiClient.post<Monitor>('/api/v1/monitors', { url, interval_seconds: intervalSeconds })
+    return data
   },
 }

@@ -10,7 +10,6 @@ import { monitorsApi, type Monitor } from '../lib/api'
 export default function HomePage() {
   const router = useRouter()
   const session = useSession()
-  const { getAccessToken } = session
   const [error, setError] = useState('')
   const [pending, setPending] = useState(false)
   const [monitorPending, setMonitorPending] = useState(false)
@@ -19,9 +18,8 @@ export default function HomePage() {
   const [monitorFormOpen, setMonitorFormOpen] = useState(false)
 
   const loadMonitors = useCallback(async () => {
-    const token = await getAccessToken()
-    setMonitors(await monitorsApi.list(token))
-  }, [getAccessToken])
+    setMonitors(await monitorsApi.list())
+  }, [])
 
   useEffect(() => {
     if (session.status === 'anonymous') router.replace('/login')
@@ -32,8 +30,7 @@ export default function HomePage() {
     let active = true
     async function load() {
       try {
-        const token = await getAccessToken()
-        const result = await monitorsApi.list(token)
+        const result = await monitorsApi.list()
         if (active) setMonitors(result)
       } catch (cause) {
         if (active) setMonitorError(authErrorMessage(cause, 'session'))
@@ -41,7 +38,7 @@ export default function HomePage() {
     }
     void load()
     return () => { active = false }
-  }, [getAccessToken, session.status])
+  }, [session.status])
 
   async function createMonitor(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -51,8 +48,7 @@ export default function HomePage() {
     const formElement = event.currentTarget
     const form = new FormData(formElement)
     try {
-      const token = await session.getAccessToken()
-      await monitorsApi.create(token, String(form.get('url')), Number(form.get('interval')))
+      await monitorsApi.create(String(form.get('url')), Number(form.get('interval')))
       formElement.reset()
       setMonitorFormOpen(false)
       await loadMonitors()
