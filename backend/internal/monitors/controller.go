@@ -18,6 +18,11 @@ type Controller struct {
 	Tokens auth.Tokens
 }
 
+type createRequest struct {
+	URL      string `json:"url"`
+	Interval int    `json:"interval_seconds"`
+}
+
 func NewController(db *gorm.DB, tokens auth.Tokens) *Controller {
 	return &Controller{DB: db, Tokens: tokens}
 }
@@ -45,6 +50,15 @@ func (c *Controller) requireAccess(next http.Handler) http.Handler {
 	})
 }
 
+// list returns the authenticated user's monitors.
+// @Summary List monitors
+// @Tags monitors
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} store.Monitor
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /monitors [get]
 func (c *Controller) list(w http.ResponseWriter, r *http.Request) {
 	id := r.Context().Value(userIDKey{}).(uint)
 	var monitors []store.Monitor
@@ -55,11 +69,20 @@ func (c *Controller) list(w http.ResponseWriter, r *http.Request) {
 	httpjson.WriteJSON(w, http.StatusOK, monitors)
 }
 
+// create adds a monitor for the authenticated user.
+// @Summary Create monitor
+// @Tags monitors
+// @Accept json
+// @Produce json
+// @Param request body createRequest true "Monitor configuration"
+// @Security BearerAuth
+// @Success 201 {object} store.Monitor
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /monitors [post]
 func (c *Controller) create(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		URL      string `json:"url"`
-		Interval int    `json:"interval_seconds"`
-	}
+	var input createRequest
 	if err := httpjson.Decode(r, &input); err != nil {
 		httpjson.WriteError(w, http.StatusBadRequest, "invalid request body")
 		return

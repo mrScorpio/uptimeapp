@@ -14,6 +14,15 @@ import (
 	"github.com/mrscorpio/uptimeapp/backend/internal/store"
 )
 
+// @title UptimeApp API
+// @version 1.0
+// @description API для управления аккаунтом и мониторингами.
+// @BasePath /api/v1
+// @securityDefinitions.apikey BearerAuth
+// @in header
+// @name Authorization
+// @description Укажите токен в формате `Bearer <access_token>`.
+
 func main() {
 	cfg, err := config.Load()
 	if err != nil {
