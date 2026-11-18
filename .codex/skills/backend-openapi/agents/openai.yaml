@@ -1,0 +1,7 @@
+interface:
+  display_name: "Backend OpenAPI Sync"
+  short_description: "Sync backend routes with Swagger and Redoc"
+  default_prompt: "Use $backend-openapi to sync annotations and regenerate Swagger and Redoc after backend route changes."
+
+policy:
+  allow_implicit_invocation: true

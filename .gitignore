@@ -8,3 +8,4 @@ frontend/.env*
 backend/.env*
 !backend/.env.example
 backend/avatars/
+backend/scripts/__pycache__
