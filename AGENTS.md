@@ -13,31 +13,35 @@ Read the applicable nested guide before changing a project:
 
 Keep changes focused, use clear names, and update documentation when commands, configuration, or public behavior changes. Run the relevant formatting, linting, build, and test commands before opening a pull request.
 
-## Commit & Pull Request Guidelines
+## Backend API Documentation
 
-Use GitHub Flow for every task: create a separate branch from the main branch before making task changes, and do not commit task changes directly to the main branch.
+Add or update swaggo annotations for every backend HTTP route whenever its path, parameters, request body, response, or behavior changes. Regenerate the checked-in Swagger contract from `backend/` after changing a route or its annotations:
 
-Name task branches using `<type>/<feature-name>`, where `<type>` is `feat` for new functionality or `fix` for a correction, and `<feature-name>` is a concise transliterated Russian name written in lowercase kebab-case. For example: `feat/dobavit-proverku-sayta` or `fix/ispravit-vhod`.
+```sh
+go tool swag init -g main.go -d cmd/api,internal/auth,internal/users,internal/monitors,internal/store -o docs --parseInternal --outputTypes json,yaml
+```
 
-Use Conventional Commits (`feat`, `fix`, `refactor`, `test`, `docs`, `chore`) with concise imperative subjects and a 72-character header limit. Do not use emoji or vague promotional wording. Keep each commit focused on one logical step.
+Commit the regenerated `backend/docs/swagger.json`, `backend/docs/swagger.yaml`, and `backend/docs/redoc.html` with the route change. Refresh the Redoc HTML after regenerating the Swagger contract:
 
-### Pull Request workflow
+```sh
+python3 backend/scripts/generate-redoc.py
+```
 
-For each task, open a pull request from the task branch into `master` after implementation and validation are complete. Do not include unrelated working-tree changes in the branch or pull request.
+## When starting a new task use GitHub Flow
 
-- Use a Conventional Commit style title with a type and imperative summary, such as `feat: add monitor creation flow`. Keep the title concise and within 72 characters.
-- Write the description so a reviewer can understand the change without reading the whole diff. Include a summary of user-visible behavior, implementation details for each affected project, any important scope limits, and a checklist of validation commands with their results.
-- Link the related issue when one exists; do not invent an issue reference when none was provided.
-- Include screenshots or a short recording for visible frontend changes when available.
-- Push the task branch and confirm the PR base is `master`. Report the PR URL, title, and validation results after creation.
+details in file: docs/rules/github-flow.md
+
+## When creating Pull Request
+
+details in file: docs/rules/pr.md
 
 ## Configuration & Security
 
 Do not commit secrets, tokens, credentials, or local environment files. Use safe example values in tracked configuration documentation and provide real credentials through the deployment environment. Review changes for accidental exposure of sensitive data before committing.
 
-## Additional commit rules
-
-Format: Convetional Commits (feat, fix, refactor, test, docs, chore).
-Header limit is 72 symbols.
-No emoji, no "significantly improve" phrases and other garbage.
-One logical step - one commit.
+## Комментарии в коде
+- комментируй не что, а почему
+- очевидное не комментируй, лучше используй правильные наименования
+- для публичных функций делай doc comments
+- сложную арифметику поясняй рядом
+- если меняешь код, то актуализируй комментарии

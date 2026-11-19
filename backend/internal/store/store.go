@@ -31,12 +31,13 @@ type Session struct {
 }
 
 type Monitor struct {
-	ID        uint      `gorm:"primaryKey" json:"id"`
-	UserID    uint      `gorm:"index;not null" json:"user_id"`
-	URL       string    `gorm:"not null" json:"url"`
-	Interval  int       `gorm:"not null" json:"interval_seconds"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"-"`
+	ID        uint           `gorm:"primaryKey" json:"id"`
+	UserID    uint           `gorm:"index;not null" json:"user_id"`
+	URL       string         `gorm:"not null" json:"url"`
+	Interval  int            `gorm:"not null" json:"interval_seconds"`
+	CreatedAt time.Time      `json:"created_at"`
+	UpdatedAt time.Time      `json:"-"`
+	DeletedAt gorm.DeletedAt `gorm:"index" json:"-"`
 }
 
 func Open(ctx context.Context, dsn string) (*gorm.DB, error) {

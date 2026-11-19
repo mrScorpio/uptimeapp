@@ -46,6 +46,28 @@ type loginRequest struct {
 	Password   string `json:"password"`
 }
 
+type tokenResponse struct {
+	AccessToken string `json:"access_token"`
+	TokenType   string `json:"token_type"`
+}
+
+type sessionResponse struct {
+	AccessToken string     `json:"access_token"`
+	TokenType   string     `json:"token_type"`
+	User        store.User `json:"user"`
+}
+
+// register creates an account and returns an access token. A refresh token is set in an HttpOnly cookie.
+// @Summary Register an account
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body registerRequest true "Account credentials"
+// @Success 201 {object} sessionResponse
+// @Failure 400 {object} map[string]string
+// @Failure 409 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /auth/register [post]
 func (a *Controller) register(w http.ResponseWriter, r *http.Request) {
 	var in registerRequest
 	if err := httpjson.Decode(r, &in); err != nil {
@@ -86,6 +108,17 @@ func validLogin(s string) bool {
 	return true
 }
 
+// login authenticates an account using its email or login.
+// @Summary Log in
+// @Tags auth
+// @Accept json
+// @Produce json
+// @Param request body loginRequest true "Login credentials"
+// @Success 200 {object} sessionResponse
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /auth/login [post]
 func (a *Controller) login(w http.ResponseWriter, r *http.Request) {
 	var in loginRequest
 	if err := httpjson.Decode(r, &in); err != nil {
@@ -130,6 +163,14 @@ func (a *Controller) issue(w http.ResponseWriter, r *http.Request, u *store.User
 	httpjson.WriteJSON(w, status, map[string]any{"access_token": access, "token_type": "Bearer", "user": u})
 }
 
+// refresh rotates the refresh cookie and returns a new access token.
+// @Summary Refresh access token
+// @Tags auth
+// @Produce json
+// @Success 200 {object} tokenResponse
+// @Failure 401 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /auth/refresh [post]
 func (a *Controller) refresh(w http.ResponseWriter, r *http.Request) {
 	c, err := r.Cookie(cookieName)
 	if err != nil || c.Value == "" {
@@ -169,6 +210,12 @@ func (a *Controller) refresh(w http.ResponseWriter, r *http.Request) {
 	httpjson.WriteJSON(w, 200, map[string]any{"access_token": access, "token_type": "Bearer"})
 }
 
+// logout revokes the refresh cookie when present.
+// @Summary Log out
+// @Tags auth
+// @Success 204
+// @Failure 500 {object} map[string]string
+// @Router /auth/logout [post]
 func (a *Controller) logout(w http.ResponseWriter, r *http.Request) {
 	c, err := r.Cookie(cookieName)
 	if err == nil && c.Value != "" {

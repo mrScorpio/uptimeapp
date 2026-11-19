@@ -51,7 +51,7 @@ func (a *API) cors(next http.Handler) http.Handler {
 			w.Header().Set("Vary", "Origin")
 		}
 		if r.Method == http.MethodOptions {
-			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
 			w.Header().Set("Access-Control-Allow-Headers", "Authorization, Content-Type")
 			w.WriteHeader(http.StatusNoContent)
 			return

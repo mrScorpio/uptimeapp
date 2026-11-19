@@ -35,6 +35,23 @@ func (c *Controller) RegisterRoutes(mux *http.ServeMux) {
 
 const maxAvatarSize = 5 << 20
 
+type updateMeRequest struct {
+	Name string `json:"name"`
+}
+
+// updateAvatar stores the authenticated user's avatar image.
+// @Summary Upload profile avatar
+// @Tags users
+// @Accept mpfd
+// @Produce json
+// @Param avatar formData file true "PNG, JPEG, or WebP image up to 5 MB"
+// @Security BearerAuth
+// @Success 200 {object} store.User
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /users/me/avatar [post]
 func (c *Controller) updateAvatar(w http.ResponseWriter, r *http.Request) {
 	r.Body = http.MaxBytesReader(w, r.Body, maxAvatarSize+(1<<20))
 	if err := r.ParseMultipartForm(maxAvatarSize); err != nil {
@@ -111,6 +128,14 @@ func (c *Controller) requireAccess(next http.Handler) http.Handler {
 	})
 }
 
+// me returns the authenticated user's profile.
+// @Summary Get current user
+// @Tags users
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {object} store.User
+// @Failure 401 {object} map[string]string
+// @Router /users/me [get]
 func (c *Controller) me(w http.ResponseWriter, r *http.Request) {
 	id := r.Context().Value(userIDKey{}).(uint)
 	var u store.User
@@ -121,10 +146,21 @@ func (c *Controller) me(w http.ResponseWriter, r *http.Request) {
 	httpjson.WriteJSON(w, 200, u)
 }
 
+// updateMe changes the authenticated user's display name.
+// @Summary Update current user
+// @Tags users
+// @Accept json
+// @Produce json
+// @Param request body updateMeRequest true "Profile fields"
+// @Security BearerAuth
+// @Success 200 {object} store.User
+// @Failure 400 {object} map[string]string
+// @Failure 401 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 500 {object} map[string]string
+// @Router /users/me [patch]
 func (c *Controller) updateMe(w http.ResponseWriter, r *http.Request) {
-	var input struct {
-		Name string `json:"name"`
-	}
+	var input updateMeRequest
 	if err := httpjson.Decode(r, &input); err != nil {
 		httpjson.WriteError(w, http.StatusBadRequest, "invalid request body")
 		return

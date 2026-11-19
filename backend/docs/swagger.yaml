@@ -1,0 +1,476 @@
+basePath: /api/v1
+definitions:
+  auth.loginRequest:
+    properties:
+      identifier:
+        type: string
+      password:
+        type: string
+    type: object
+  auth.registerRequest:
+    properties:
+      email:
+        type: string
+      login:
+        type: string
+      password:
+        type: string
+    type: object
+  auth.sessionResponse:
+    properties:
+      access_token:
+        type: string
+      token_type:
+        type: string
+      user:
+        $ref: '#/definitions/store.User'
+    type: object
+  auth.tokenResponse:
+    properties:
+      access_token:
+        type: string
+      token_type:
+        type: string
+    type: object
+  monitors.createRequest:
+    properties:
+      interval_seconds:
+        type: integer
+      url:
+        type: string
+    type: object
+  store.Monitor:
+    properties:
+      created_at:
+        type: string
+      id:
+        type: integer
+      interval_seconds:
+        type: integer
+      url:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  store.User:
+    properties:
+      avatar_url:
+        type: string
+      created_at:
+        type: string
+      email:
+        type: string
+      id:
+        type: integer
+      login:
+        type: string
+      name:
+        type: string
+    type: object
+  users.updateMeRequest:
+    properties:
+      name:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: API для управления аккаунтом и мониторингами.
+  title: UptimeApp API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.loginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.sessionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Log in
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      responses:
+        "204":
+          description: No Content
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Log out
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/auth.tokenResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Account credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/auth.registerRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/auth.sessionResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "409":
+          description: Conflict
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register an account
+      tags:
+      - auth
+  /monitors:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/store.Monitor'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: List monitors
+      tags:
+      - monitors
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Monitor configuration
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/monitors.createRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/store.Monitor'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Create monitor
+      tags:
+      - monitors
+  /monitors/{id}:
+    delete:
+      parameters:
+      - description: Monitor ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete monitor
+      tags:
+      - monitors
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Monitor ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated monitor configuration
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/monitors.createRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.Monitor'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update monitor
+      tags:
+      - monitors
+  /users/me:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.User'
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get current user
+      tags:
+      - users
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Profile fields
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/users.updateMeRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update current user
+      tags:
+      - users
+  /users/me/avatar:
+    post:
+      consumes:
+      - multipart/form-data
+      parameters:
+      - description: PNG, JPEG, or WebP image up to 5 MB
+        in: formData
+        name: avatar
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.User'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Upload profile avatar
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: Укажите токен в формате `Bearer <access_token>`.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
