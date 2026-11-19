@@ -146,6 +146,11 @@ dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; text-align: right; }
 .monitor-info { display: flex; flex: 1; flex-direction: column; gap: 5px; min-width: 0; }
 .monitor-info a { overflow-wrap: anywhere; }
 .monitor-info span, .monitor-status { color: #5f6d81; font-size: 13px; }
+.monitor-actions { display: flex; gap: 8px; }
+.monitor-actions button, .monitor-form-actions .danger-button { min-height: 40px; padding: 0 12px; }
+.danger-button { border: 1px solid #c62828; border-radius: 8px; background: #fff; color: #b42318; cursor: pointer; }
+.danger-button:hover:not(:disabled) { background: #fff1f0; }
+.danger-button:disabled { cursor: not-allowed; opacity: 0.65; }
 .modal-backdrop { position: fixed; z-index: 10; inset: 0; display: grid; place-items: center; overflow-y: auto; padding: 24px; background: rgb(21 32 51 / 42%); }
 .monitor-form-card { width: min(100%, 440px); margin: auto; }
 .monitor-form-card h2 { margin: 0 0 8px; }
@@ -157,6 +162,7 @@ dd { margin: 0; font-weight: 600; overflow-wrap: anywhere; text-align: right; }
   .monitor-heading { align-items: flex-start; flex-direction: column; }
   .monitor-card { align-items: flex-start; flex-wrap: wrap; }
   .monitor-status { margin-left: 24px; }
+  .monitor-actions { width: 100%; margin-left: 24px; }
 }
 @media (max-width: 480px) {
   .profile-name { display: none; }

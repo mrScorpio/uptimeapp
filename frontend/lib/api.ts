@@ -94,4 +94,11 @@ export const monitorsApi = {
     const { data } = await apiClient.post<Monitor>('/api/v1/monitors', { url, interval_seconds: intervalSeconds })
     return data
   },
+  async update(id: number, url: string, intervalSeconds: number) {
+    const { data } = await apiClient.patch<Monitor>(`/api/v1/monitors/${id}`, { url, interval_seconds: intervalSeconds })
+    return data
+  },
+  async delete(id: number) {
+    await apiClient.delete(`/api/v1/monitors/${id}`)
+  },
 }

@@ -16,6 +16,8 @@ export default function HomePage() {
   const [monitorError, setMonitorError] = useState('')
   const [monitors, setMonitors] = useState<Monitor[]>([])
   const [monitorFormOpen, setMonitorFormOpen] = useState(false)
+  const [editingMonitor, setEditingMonitor] = useState<Monitor | null>(null)
+  const [deletingMonitor, setDeletingMonitor] = useState<Monitor | null>(null)
 
   const loadMonitors = useCallback(async () => {
     setMonitors(await monitorsApi.list())
@@ -40,7 +42,19 @@ export default function HomePage() {
     return () => { active = false }
   }, [session.status])
 
-  async function createMonitor(event: FormEvent<HTMLFormElement>) {
+  function openCreateMonitor() {
+    setMonitorError('')
+    setEditingMonitor(null)
+    setMonitorFormOpen(true)
+  }
+
+  function openEditMonitor(monitor: Monitor) {
+    setMonitorError('')
+    setEditingMonitor(monitor)
+    setMonitorFormOpen(true)
+  }
+
+  async function saveMonitor(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
     if (monitorPending) return
     setMonitorError('')
@@ -48,9 +62,31 @@ export default function HomePage() {
     const formElement = event.currentTarget
     const form = new FormData(formElement)
     try {
-      await monitorsApi.create(String(form.get('url')), Number(form.get('interval')))
+      const url = String(form.get('url'))
+      const interval = Number(form.get('interval'))
+      if (editingMonitor) {
+        await monitorsApi.update(editingMonitor.id, url, interval)
+      } else {
+        await monitorsApi.create(url, interval)
+      }
       formElement.reset()
       setMonitorFormOpen(false)
+      setEditingMonitor(null)
+      await loadMonitors()
+    } catch (cause) {
+      setMonitorError(authErrorMessage(cause, 'session'))
+    } finally {
+      setMonitorPending(false)
+    }
+  }
+
+  async function deleteMonitor() {
+    if (!deletingMonitor || monitorPending) return
+    setMonitorError('')
+    setMonitorPending(true)
+    try {
+      await monitorsApi.delete(deletingMonitor.id)
+      setDeletingMonitor(null)
       await loadMonitors()
     } catch (cause) {
       setMonitorError(authErrorMessage(cause, 'session'))
@@ -105,14 +141,19 @@ export default function HomePage() {
       <main className="monitor-page">
         <div className="monitor-heading">
           <div><h1>Мониторинг сайтов</h1><p className="muted">Добавьте сайт, чтобы создать точку мониторинга.</p></div>
-          <button type="button" className="add-monitor-link" onClick={() => { setMonitorError(''); setMonitorFormOpen(true) }}>Добавить сайт</button>
+          <button type="button" className="add-monitor-link" onClick={openCreateMonitor}>Добавить сайт</button>
         </div>
         <section className="monitor-list" aria-label="Точки мониторинга">
+          {monitorError && !monitorFormOpen && !deletingMonitor && <p className="error" role="alert">{monitorError}</p>}
           {monitors.length === 0 ? <p className="empty-monitors">Пока нет добавленных сайтов</p> : monitors.map((monitor) => (
             <article className="monitor-card" key={monitor.id}>
               <span className="monitor-indicator" aria-hidden="true" />
               <div className="monitor-info"><a href={monitor.url} target="_blank" rel="noreferrer">{monitor.url}</a><span>Опрос каждые {monitor.interval_seconds} сек.</span></div>
               <span className="monitor-status">Ожидает проверки</span>
+              <div className="monitor-actions">
+                <button type="button" className="secondary" disabled={monitorPending} onClick={() => openEditMonitor(monitor)}>Редактировать</button>
+                <button type="button" className="danger-button" disabled={monitorPending} onClick={() => { setMonitorError(''); setDeletingMonitor(monitor) }}>Удалить</button>
+              </div>
             </article>
           ))}
         </section>
@@ -120,19 +161,32 @@ export default function HomePage() {
       {monitorFormOpen && (
         <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !monitorPending) setMonitorFormOpen(false) }}>
           <section className="card monitor-form-card" role="dialog" aria-modal="true" aria-labelledby="monitor-form-title" onKeyDown={(event) => { if (event.key === 'Escape' && !monitorPending) setMonitorFormOpen(false) }}>
-            <h2 id="monitor-form-title">Добавить сайт</h2>
-            <p className="muted">Создайте точку мониторинга для сайта.</p>
-            <form onSubmit={createMonitor}>
+            <h2 id="monitor-form-title">{editingMonitor ? 'Редактировать сайт' : 'Добавить сайт'}</h2>
+            <p className="muted">{editingMonitor ? 'Измените адрес или частоту опроса.' : 'Создайте точку мониторинга для сайта.'}</p>
+            <form key={editingMonitor?.id ?? 'new'} onSubmit={saveMonitor}>
               <label htmlFor="monitor-url">URL сайта</label>
-              <input id="monitor-url" name="url" type="url" placeholder="https://example.com" autoFocus required />
+              <input id="monitor-url" name="url" type="url" placeholder="https://example.com" defaultValue={editingMonitor?.url ?? ''} autoFocus required />
               <label htmlFor="monitor-interval">Частота опроса (секунды)</label>
-              <input id="monitor-interval" name="interval" type="number" min="1" max="86400" defaultValue="60" required />
+              <input id="monitor-interval" name="interval" type="number" min="1" max="86400" defaultValue={editingMonitor?.interval_seconds ?? 60} required />
               {monitorError && <p className="error" role="alert">{monitorError}</p>}
               <div className="monitor-form-actions">
                 <button type="button" className="secondary" disabled={monitorPending} onClick={() => setMonitorFormOpen(false)}>Отмена</button>
-                <button type="submit" disabled={monitorPending}>{monitorPending ? 'Создаём…' : 'Создать'}</button>
+                <button type="submit" disabled={monitorPending}>{monitorPending ? 'Сохраняем…' : editingMonitor ? 'Сохранить' : 'Создать'}</button>
               </div>
             </form>
+          </section>
+        </div>
+      )}
+      {deletingMonitor && (
+        <div className="modal-backdrop" onMouseDown={(event) => { if (event.target === event.currentTarget && !monitorPending) setDeletingMonitor(null) }}>
+          <section className="card monitor-form-card" role="alertdialog" aria-modal="true" aria-labelledby="delete-monitor-title" onKeyDown={(event) => { if (event.key === 'Escape' && !monitorPending) setDeletingMonitor(null) }}>
+            <h2 id="delete-monitor-title">Удалить сайт?</h2>
+            <p className="muted">Сайт {deletingMonitor.url} будет скрыт из списка.</p>
+            {monitorError && <p className="error" role="alert">{monitorError}</p>}
+            <div className="monitor-form-actions">
+              <button type="button" className="secondary" disabled={monitorPending} onClick={() => setDeletingMonitor(null)}>Отмена</button>
+              <button type="button" className="danger-button" disabled={monitorPending} onClick={deleteMonitor}>{monitorPending ? 'Удаляем…' : 'Удалить сайт'}</button>
+            </div>
           </section>
         </div>
       )}

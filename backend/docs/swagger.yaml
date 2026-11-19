@@ -262,6 +262,99 @@ paths:
       summary: Create monitor
       tags:
       - monitors
+  /monitors/{id}:
+    delete:
+      parameters:
+      - description: Monitor ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Delete monitor
+      tags:
+      - monitors
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Monitor ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Updated monitor configuration
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/monitors.createRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/store.Monitor'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Update monitor
+      tags:
+      - monitors
   /users/me:
     get:
       produces:
