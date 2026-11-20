@@ -1,0 +1,20 @@
+{
+    "hooks": {
+        "PostToolUse":[
+            {
+                "matcher": "apply_patch|Edit|Write",
+                "hooks":[
+                    {
+                        "type": "command",
+                        "command": ".codex/hooks/gofmt.sh"
+                    },
+                    {
+                        "type": "command",
+                        "command": ".codex/hooks/frontend-eslint.sh"
+                    }
+                ]
+            }
+        ]
+
+    }
+}

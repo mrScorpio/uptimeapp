@@ -45,11 +45,11 @@ func Open(ctx context.Context, dsn string) (*gorm.DB, error) {
 	if err != nil {
 		return nil, err
 	}
-	sqlDB, err := db.DB()
+	sqlDb, err := db.DB()
 	if err != nil {
 		return nil, err
 	}
-	if err := sqlDB.PingContext(ctx); err != nil {
+	if err := sqlDb.PingContext(ctx); err != nil {
 		return nil, err
 	}
 	if err := db.WithContext(ctx).AutoMigrate(&User{}, &Session{}, &Monitor{}); err != nil {
