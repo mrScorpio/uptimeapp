@@ -1,8 +1,18 @@
 {
     "hooks": {
+        "Stop":[
+            {
+                "hooks":[
+                    {
+                        "type": "command",
+                        "command": ".codex/hooks/notify-stop.sh"
+                    }
+                ]
+            }
+        ],
         "PostToolUse":[
             {
-                "matcher": "apply_patch|Edit|Write",
+                "matcher": "(?:functions\\.)?apply_patch|Edit|Write",
                 "hooks":[
                     {
                         "type": "command",
